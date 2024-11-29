@@ -1,4 +1,4 @@
-local settings = require('mason-nvim-dap.settings')
+local command_parser = require('mason-nvim-dap.internal.command_parser')
 
 local M = {}
 
@@ -9,6 +9,10 @@ M.delve = {
 		name = 'Delve: Debug',
 		request = 'launch',
 		program = '${workspaceFolder}',
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
+		end,
 	},
 	{
 		type = 'delve',
@@ -50,7 +54,10 @@ M.bash = {
 		pathMkfifo = 'mkfifo',
 		pathPkill = 'pkill',
 		env = {},
-		args = {},
+		args = function()
+			local args = vim.fn.input('Script args: ')
+			return command_parser.parse(args)
+		end,
 	},
 }
 
@@ -62,6 +69,10 @@ M.python = {
 		request = 'launch',
 		name = 'Python: Launch file',
 		program = '${file}', -- This configuration will launch the current file if used.
+		args = function()
+			local args = vim.fn.input('Script args: ')
+			return command_parser.parse(args)
+		end,
 		-- venv on Windows uses Scripts instead of bin
 		pythonPath = venv_path
 				and ((vim.fn.has('win32') == 1 and venv_path .. '/Scripts/python') or venv_path .. '/bin/python')
@@ -81,23 +92,8 @@ M.codelldb = {
 		cwd = '${workspaceFolder}',
 		stopOnEntry = false,
 		args = function()
-			local function parse_command_line(cmd)
-				local args = {}
-				local pattern = '("[^"]+"|\'[^\']+\'|%S+)'
-				for arg in cmd:gmatch(pattern) do
-					if
-						(arg:sub(1, 1) == '"' and arg:sub(-1) == '"')
-						or (arg:sub(1, 1) == "'" and arg:sub(-1) == "'")
-					then
-						arg = arg:sub(2, -2)
-					end
-					table.insert(args, arg)
-				end
-				return args
-			end
-
 			local args = vim.fn.input('Executable args: ')
-			return parse_command_line(args)
+			return command_parser.parse(args)
 		end,
 		console = 'integratedTerminal',
 	},
@@ -109,6 +105,10 @@ M.node2 = {
 		type = 'node2',
 		request = 'launch',
 		program = '${file}',
+		args = function()
+			local args = vim.fn.input('Script args: ')
+			return command_parser.parse(args)
+		end,
 		cwd = vim.fn.getcwd(),
 		sourceMaps = true,
 		protocol = 'inspector',
@@ -134,6 +134,10 @@ M.chrome = {
 		protocol = 'inspector',
 		port = 9222,
 		webRoot = '${workspaceFolder}',
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
+		end,
 	},
 }
 
@@ -146,6 +150,10 @@ M.firefox = {
 		url = 'http://localhost:3000',
 		webRoot = '${workspaceFolder}',
 		firefoxExecutable = vim.fn.exepath('firefox'),
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
+		end,
 	},
 }
 
@@ -153,6 +161,10 @@ M.php = {
 	{
 		type = 'php',
 		request = 'launch',
+		args = function()
+			local args = vim.fn.input('Script args: ')
+			return command_parser.parse(args)
+		end,
 		name = 'PHP: Listen for Xdebug',
 		port = 9000,
 	},
@@ -185,6 +197,10 @@ M.coreclr = {
 		request = 'launch',
 		cwd = '${fileDirname}',
 		program = get_dll,
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
+		end,
 	},
 }
 
@@ -195,6 +211,10 @@ M.cppdbg = {
 		request = 'launch',
 		program = function()
 			return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+		end,
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
 		end,
 		cwd = '${workspaceFolder}',
 		stopAtEntry = true,
@@ -209,6 +229,10 @@ M.cppdbg = {
 		cwd = '${workspaceFolder}',
 		program = function()
 			return vim.fn.input('Path to executable: ', vim.fn.getcwd() .. '/', 'file')
+		end,
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
 		end,
 	},
 }
@@ -226,6 +250,10 @@ M.elixir = {
 			'test/**/test_helper.exs',
 			'test/**/*_test.exs',
 		},
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
+		end,
 	},
 }
 
@@ -238,6 +266,10 @@ M.kotlin = {
 		mainClass = function()
 			-- return vim.fn.input("Path to main class > ", "myapp.sample.app.AppKt", "file")
 			return vim.fn.input('Path to main class > ', '', 'file')
+		end,
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
 		end,
 	},
 }
@@ -257,6 +289,10 @@ M.dart = {
 		dartSdkPath = flutter_path() .. '/bin/cache/dart-sdk/',
 		flutterSdkPath = flutter_path(),
 		program = '${workspaceFolder}/lib/main.dart',
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
+		end,
 		cwd = '${workspaceFolder}',
 	},
 }
@@ -278,6 +314,10 @@ M.haskell = {
 		ghciCmd = 'stack ghci --with-ghc='
 			.. vim.fn.exepath('ghci-dap')
 			.. ' --test --no-load --no-build --main-is TARGET --ghci-options -fprint-evld-with-show --ghci-options -ignore-dot-ghci',
+		args = function()
+			local args = vim.fn.input('Executable args: ')
+			return command_parser.parse(args)
+		end,
 	},
 }
 
