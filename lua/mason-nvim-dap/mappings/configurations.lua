@@ -80,7 +80,25 @@ M.codelldb = {
 		end,
 		cwd = '${workspaceFolder}',
 		stopOnEntry = false,
-		args = {},
+		args = function()
+			local function parse_command_line(cmd)
+				local args = {}
+				local pattern = '("[^"]+"|\'[^\']+\'|%S+)'
+				for arg in cmd:gmatch(pattern) do
+					if
+						(arg:sub(1, 1) == '"' and arg:sub(-1) == '"')
+						or (arg:sub(1, 1) == "'" and arg:sub(-1) == "'")
+					then
+						arg = arg:sub(2, -2)
+					end
+					table.insert(args, arg)
+				end
+				return args
+			end
+
+			local args = vim.fn.input('Executable args: ')
+			return parse_command_line(args)
+		end,
 		console = 'integratedTerminal',
 	},
 }
